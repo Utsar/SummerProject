@@ -7,6 +7,23 @@ export const baseStyles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#FAF3E0",
   },
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    marginBottom: 20,
+    padding: 10,
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 10,
+  },
+  successText: {
+    color: "green",
+    marginBottom: 10,
+  },
   loadingIndicator: {
     marginTop: 20,
   },
