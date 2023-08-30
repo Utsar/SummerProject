@@ -1,49 +1,71 @@
 import React, { useState } from "react";
-import { TextInput, FlatList, TouchableOpacity, Text } from "react-native";
+import PropTypes from "prop-types";
+import {
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Text,
+  View,
+} from "react-native";
+import { debounce } from "lodash";
+import { baseStyles } from "../../../styles/baseStyles"; // Update the import path based on your folder structure
 
-/**
- * LocationSearch Component
- * - Allows users to search for a location.
- * - Displays autocomplete suggestions based on the user's input.
- * - User can select a suggestion to set a location.
- */
+// Debounced function for fetching suggestions
+const debouncedFetch = debounce((query, setSuggestions) => {
+  // Simulated function to fetch suggestions from Google Places
+  // setSuggestions(fetchedData);
+}, 300);
+
 const LocationSearch = ({ onLocationSelect }) => {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Simulated function to fetch suggestions from Google Places
   const fetchSuggestions = (query) => {
-    // Pseudo: Use Google Places API to fetch suggestions based on query
-    // setSuggestions(fetchedData);
+    try {
+      debouncedFetch(query, setSuggestions);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
-    <>
+    <View style={baseStyles.container}>
       <TextInput
+        style={baseStyles.input}
         value={input}
         onChangeText={(text) => {
           setInput(text);
           fetchSuggestions(text);
         }}
         placeholder="Search for a location..."
+        placeholderTextColor="#ccc"
+        accessibilityLabel="Search for a location"
       />
+      {error && <Text style={baseStyles.text}>Error: {error}</Text>}
       <FlatList
         data={suggestions}
         keyExtractor={(item) => item.placeId}
         renderItem={({ item }) => (
           <TouchableOpacity
+            style={baseStyles.button}
             onPress={() => {
               setInput(item.description);
               onLocationSelect(item);
               setSuggestions([]);
             }}
+            accessibilityLabel={`Select location ${item.description}`}
           >
-            <Text>{item.description}</Text>
+            <Text style={baseStyles.buttonText}>{item.description}</Text>
           </TouchableOpacity>
         )}
       />
-    </>
+    </View>
   );
+};
+
+LocationSearch.propTypes = {
+  onLocationSelect: PropTypes.func.isRequired,
 };
 
 export default LocationSearch;

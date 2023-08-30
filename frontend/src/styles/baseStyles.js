@@ -1,3 +1,4 @@
+//frontend>src>styles>baseStyles.js
 import { StyleSheet } from "react-native";
 
 export const baseStyles = StyleSheet.create({
@@ -38,5 +39,22 @@ export const baseStyles = StyleSheet.create({
   text: {
     fontSize: 16,
     color: "#3B3B3B",
+  },
+  buttonDisabled: {
+    backgroundColor: "#D3D3D3",
+  },
+  buttonActive: {
+    backgroundColor: "#5DADE2",
+  },
+  h1: {
+    fontSize: 36,
+    fontWeight: "bold",
+  },
+  h2: {
+    fontSize: 30,
+    fontWeight: "bold",
+  },
+  bodyText: {
+    fontSize: 14,
   },
 });

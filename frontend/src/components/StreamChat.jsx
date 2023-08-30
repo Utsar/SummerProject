@@ -1,45 +1,66 @@
-// StreamChat.js
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, FlatList } from "react-native";
-import io from "socket.io-client";
+import React, { useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  StyleSheet,
+} from "react-native";
+import {
+  initializeSocket,
+  sendInstruction as sendSocketInstruction,
+} from "../services/socketService";
+import { baseStyles } from "../styles/baseStyles";
 
-const socket = io("http://your-server-url:3000");
-
-const StreamChat = () => {
+const StreamChat = ({ userId }) => {
   const [message, setMessage] = useState("");
   const [instructions, setInstructions] = useState([]);
+  const flatListRef = useRef(null);
 
   useEffect(() => {
-    socket.on("receive-instruction", (data) => {
+    initializeSocket((data) => {
       setInstructions((prev) => [...prev, data]);
+      flatListRef.current.scrollToEnd({ animated: true });
     });
   }, []);
 
   const sendInstruction = () => {
-    socket.emit("send-instruction", message);
+    sendSocketInstruction(message, userId);
     setMessage("");
   };
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <View style={baseStyles.container}>
       <FlatList
+        ref={flatListRef}
         data={instructions}
-        keyExtractor={(item, index) => String(index)}
-        renderItem={({ item }) => <Text>{item}</Text>}
+        keyExtractor={(item, index) => `instruction-${index}`}
+        renderItem={({ item }) => (
+          <Text style={baseStyles.text}>
+            {item.userId === userId ? "You" : item.userId}: {item.instruction}
+          </Text>
+        )}
       />
       <TextInput
         value={message}
         onChangeText={(text) => setMessage(text)}
         placeholder="Type your instruction"
-        style={{
-          borderWidth: 1,
-          borderColor: "gray",
-          padding: 8,
-          marginVertical: 8,
-        }}
+        style={baseStyles.input}
+        accessibilityLabel="Type your instruction here"
       />
-      <Button title="Send Instruction" onPress={sendInstruction} />
+      <Button
+        title="Send Instruction"
+        onPress={sendInstruction}
+        accessibilityLabel="Send the instruction"
+      />
     </View>
   );
 };
+
+StreamChat.propTypes = {
+  userId: PropTypes.string.isRequired,
+};
+
 export default StreamChat;
