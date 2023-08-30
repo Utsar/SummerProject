@@ -1,24 +1,34 @@
-// components/StreamerInstructions.js
-
 import React, { useEffect } from "react";
-import { View, Text } from "react-native";
-import io from "socket.io-client";
-
-const socket = io("http://your-server-url:3000");
+import { View, Text, FlatList } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { useSocket } from "../contexts/SocketContext";
+import { addInstruction } from "../slices/streamSlice";
 
 const StreamerInstructions = () => {
+  const dispatch = useDispatch();
+  const socket = useSocket();
+  const instructions = useSelector((state) => state.stream.instructions);
+
   useEffect(() => {
     socket.on("receive-instruction", (instruction) => {
-      // Handle the instruction here, e.g., update state, show a notification, etc.
-      console.log(instruction);
+      dispatch(addInstruction(instruction));
     });
 
     return () => {
       socket.off("receive-instruction");
     };
-  }, []);
+  }, [socket, dispatch]);
 
-  return <View>{/* Your component UI here */}</View>;
+  return (
+    <View>
+      <Text>Instructions:</Text>
+      <FlatList
+        data={instructions}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => <Text>{item}</Text>}
+      />
+    </View>
+  );
 };
 
 export default StreamerInstructions;

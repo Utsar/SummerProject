@@ -7,6 +7,28 @@ export const baseStyles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#FAF3E0",
   },
+  loadingIndicator: {
+    marginTop: 20,
+  },
+  errorContainer: {
+    padding: 20,
+  },
+  errorText: {
+    color: "red",
+  },
+  retryButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "#007bff",
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: "white",
+    textAlign: "center",
+  },
+  mapView: {
+    flex: 1,
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",

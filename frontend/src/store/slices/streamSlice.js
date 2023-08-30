@@ -9,6 +9,7 @@ export const streamSlice = createSlice({
     isFree: true,
     userBalance: 0,
     streamCost: 0,
+    instructions: [],
   },
   reducers: {
     setStreams: (state, action) => {
@@ -28,6 +29,9 @@ export const streamSlice = createSlice({
       state.isFree = isFree;
       state.userBalance = userBalance;
       state.streamCost = streamCost;
+    },
+    addInstruction: (state, action) => {
+      state.instructions.push(action.payload);
     },
   },
 });
