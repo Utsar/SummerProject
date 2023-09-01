@@ -1,3 +1,4 @@
+//backend/src/middleware/errorMiddleware.js
 import logger from "../utils/logger"; // Import the logger
 
 // Handle not found routes

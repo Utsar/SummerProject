@@ -1,3 +1,4 @@
+// backend/src/features/stream/models/streamSchema.js
 import mongoose from "mongoose";
 
 // Define the stream schema for MongoDB.

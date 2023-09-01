@@ -66,10 +66,20 @@ export const deleteUserProfile = async (req, res) => {
   }
 };
 
-// Fetch users near a given location
+// Fetch users near a given location with pagination
 export const getUsersNearLocation = async (req, res) => {
   try {
-    const { longitude, latitude } = req.query;
+    const { longitude, latitude, page = 1, limit = 10 } = req.query;
+
+    // Page number and limit
+    const skip = (page - 1) * limit;
+
+    // Validate longitude and latitude
+    if (!longitude || !latitude) {
+      return res
+        .status(400)
+        .json({ error: "Longitude and latitude are required" });
+    }
 
     const nearbyUsers = await User.find({
       location: {
@@ -81,9 +91,28 @@ export const getUsersNearLocation = async (req, res) => {
           $maxDistance: 5000, // 5 km radius
         },
       },
-    }).limit(50); // Limit to 50 users for performance
+    })
+      .skip(skip)
+      .limit(parseInt(limit));
 
-    res.json(nearbyUsers);
+    // Count total number of nearby users
+    const totalNearbyUsers = await User.countDocuments({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(longitude), parseFloat(latitude)],
+          },
+          $maxDistance: 5000, // 5 km radius
+        },
+      },
+    });
+
+    res.json({
+      nearbyUsers,
+      totalPages: Math.ceil(totalNearbyUsers / limit),
+      currentPage: page,
+    });
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve nearby users" });
   }

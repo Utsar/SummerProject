@@ -1,3 +1,4 @@
+// backend/src/features/stream/routes/streamingRoutes.js
 import express from "express";
 
 import * as streamController from "./controllers/streamController"; // Importing the streaming controller functions.

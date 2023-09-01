@@ -11,7 +11,10 @@ export const rateLimiter = (req, res, next) => {
 
   // Use Redis to keep track of request counts
   client.get(ip, (err, record) => {
-    if (err) throw err;
+    if (err) {
+      logger.error(`Redis error: ${err}`);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
 
     if (record === null) {
       // No record in Redis for this IP

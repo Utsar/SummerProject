@@ -5,6 +5,7 @@ import bcrypt from "bcrypt"; // For hashing the password
 import jwt from "jsonwebtoken"; // To generate JWT tokens
 import crypto from "crypto"; // For generating random tokens
 import nodemailer from "nodemailer"; // To send emails
+import { OAuth2Client } from "google-auth-library"; // For OAuth2 in nodemailer
 
 // Utility function to generate a JWT token
 const generateJwtToken = (payload, expiry) => {
@@ -16,11 +17,32 @@ const generateRefreshToken = () => {
   return jwt.sign({}, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
 };
 
-// Utility function to send email
+// Utility function to send email using OAuth2
 const sendEmail = async (to, from, subject, text) => {
-  const transporter = nodemailer.createTransport({
-    // Your transport configuration here
+  const oauth2Client = new OAuth2Client(
+    process.env.OAUTH2_CLIENT_ID,
+    process.env.OAUTH2_CLIENT_SECRET,
+    "https://developers.google.com/oauthplayground"
+  );
+
+  oauth2Client.setCredentials({
+    refresh_token: process.env.OAUTH2_REFRESH_TOKEN,
   });
+
+  const accessToken = await oauth2Client.getAccessToken();
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      type: "OAuth2",
+      user: from,
+      clientId: process.env.OAUTH2_CLIENT_ID,
+      clientSecret: process.env.OAUTH2_CLIENT_SECRET,
+      refreshToken: process.env.OAUTH2_REFRESH_TOKEN,
+      accessToken: accessToken.token,
+    },
+  });
+
   const mailOptions = { to, from, subject, text };
   await transporter.sendMail(mailOptions);
 };
@@ -44,8 +66,16 @@ export const registerUser = async (req, res) => {
     if (existingEmail) {
       return res.status(400).json({ error: "Email is already in use" });
     }
+    // Adding salt and hashing the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = new User({ username, password, email, profilePicture });
+    const user = new User({
+      username,
+      password: hashedPassword,
+      email,
+      profilePicture,
+    });
     user.emailVerificationToken = crypto.randomBytes(20).toString("hex");
 
     const refreshToken = generateRefreshToken();

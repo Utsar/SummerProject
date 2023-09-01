@@ -1,3 +1,4 @@
+//backend/src/middleware/locationPrecision.js
 import logger from "../utils/logger"; // Import the logger
 
 // Define the enum within the same file
@@ -9,6 +10,13 @@ const PrecisionTypes = {
 
 export const adjustLocationPrecision = (req, res, next) => {
   const { latitude, longitude, precision } = req.body;
+
+  // Validate if latitude and longitude actually exist
+  if (latitude === undefined || longitude === undefined) {
+    return res
+      .status(400)
+      .json({ error: "Latitude and longitude must be provided" });
+  }
 
   // Validate if latitude and longitude are numbers
   if (typeof latitude !== "number" || typeof longitude !== "number") {

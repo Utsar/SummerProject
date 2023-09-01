@@ -1,3 +1,5 @@
+//backend/src/middlewares/checkBalance.js
+
 import Stream from "../features/streaming/models/streamSchema";
 import User from "../features/user/models/userSchema";
 import mongoose from "mongoose";
@@ -46,7 +48,7 @@ const checkUserBalance = async (req, res, next) => {
 
     // If the stream has a one-time fee, reserve the funds
     if (stream.feeType === "one-time") {
-      reserveFundsForStream(user, stream.fee);
+      reserveFundsForStream(user, stream.fee, session);
     }
 
     await session.commitTransaction(); // Commit the transaction
@@ -84,7 +86,10 @@ const reserveFundsForStream = async (user, fee) => {
         reservedFunds: fee,
       },
     },
-    { new: true } // This option ensures that the updated document is returned
+    {
+      new: true, // This option ensures that the updated document is returned
+      session,
+    } // Pass the session to make this part of the transaction
   );
 
   if (!updatedUser) {

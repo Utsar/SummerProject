@@ -21,8 +21,7 @@ export const createStream = async (req, res) => {
   try {
     const { name, fee, feeType } = req.body;
 
-    // User association. Assuming you have authentication middleware that sets req.user
-    const userId = req.user._id;
+    const userId = req.user._id; // Assuming authentication middleware sets req.user
 
     const stream = new Stream({
       user: userId,
@@ -45,10 +44,34 @@ export const createStream = async (req, res) => {
 // Controller for joining a stream
 export const joinStream = async (req, res) => {
   try {
-    // Further logic for joining a stream can go here.
-    // For example, decrementing the user's balance or adding the user to the stream's list of viewers.
+    const userId = req.user._id;
+    const streamId = req.params.streamId;
 
-    console.log(`User ${req.user._id} joined stream ${req.params.streamId}`); // Logging
+    // Fetch the user and the stream to join
+    const user = await User.findById(userId);
+    const stream = await Stream.findById(streamId);
+
+    // Check if the stream exists
+    if (!stream) {
+      return res.status(404).json({ error: "Stream not found" });
+    }
+
+    // Check if the user has sufficient balance to join the stream
+    if (stream.fee > 0 && user.balance < stream.fee) {
+      return res
+        .status(400)
+        .json({ error: "Insufficient balance to join the stream" });
+    }
+
+    // Deduct the fee from the user's balance only if there is a fee
+    if (stream.fee > 0) {
+      user.balance -= stream.fee;
+      await user.save();
+    }
+
+    // TODO: Add the user to the stream's participants list
+    // stream.participants.push(userId);
+    // await stream.save();
 
     res.status(200).json({ message: "Successfully joined the stream" });
   } catch (error) {

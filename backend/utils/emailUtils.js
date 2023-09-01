@@ -1,3 +1,4 @@
+//backend/src/utils/emailUtils.js
 import nodemailer from "nodemailer";
 
 export const sendEmail = async (to, from, subject, text) => {

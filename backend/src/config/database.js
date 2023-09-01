@@ -9,7 +9,6 @@ const connectDB = async () => {
       useCreateIndex: true,
       autoReconnect: true,
       reconnectInterval: 5000,
-      reconnectTries: Number.MAX_VALUE,
     };
 
     mongoose.connection.on("connected", () => {

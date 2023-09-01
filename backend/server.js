@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import http from "http";
 import morgan from "morgan"; // Added for logging
+import { Server } from "socket.io";
 
 import connectDB from "./config/database";
 import initializeSocket from "./src/config/socketIO"; // Separate file for Socket.io logic
