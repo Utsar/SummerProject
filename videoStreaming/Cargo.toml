@@ -1,0 +1,11 @@
+[package]
+name = "video_streaming"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+ffmpeg-next = { version = "4.4.0", features = ["no-pkg-config"] }
+tokio = { version = "1", features = ["full"] }
+log = "0.4"
+env_logger = "0.9"
+pkg-config = "0.3.27"
