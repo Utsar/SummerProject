@@ -1,4 +1,4 @@
-// features/location/models/locationSchema.js
+// backend>serc>features/location/models/locationSchema.js
 
 import mongoose from "mongoose";
 

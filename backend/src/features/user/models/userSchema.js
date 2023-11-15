@@ -1,4 +1,4 @@
-// features/user/models/userSchema.js
+// backend>src>features/user/models/userSchema.js
 
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";

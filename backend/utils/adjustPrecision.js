@@ -1,4 +1,4 @@
-// features/location/utils/adjustPrecision.js
+// backend>utils>/adjustPrecision.js
 
 export const adjustLocationPrecision = (latitude, longitude, precision) => {
   return new Promise((resolve, reject) => {
