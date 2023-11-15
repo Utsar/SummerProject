@@ -1,4 +1,4 @@
-// features/location/routes/locationRoutes.js
+// backend>src>features/location/routes/locationRoutes.js
 import express from "express";
 import {
   createLocation,

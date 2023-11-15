@@ -1,4 +1,4 @@
-// features/location/controllers/locationController.js
+// backend>src/features/location/controllers/locationController.js
 
 import Location from "../models/locationSchema";
 import User from "../../user/models/userSchema";

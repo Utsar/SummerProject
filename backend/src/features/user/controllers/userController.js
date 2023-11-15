@@ -1,4 +1,4 @@
-// features/user/controllers/userController.js
+// backend>src>features/user/controllers/userController.js
 import Joi from "@hapi/joi";
 import User from "../models/userSchema";
 import { customErrorHandler } from "../../../middlewares/customErrorHandler"; // Assuming you have a custom error handler

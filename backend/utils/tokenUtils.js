@@ -1,4 +1,4 @@
-//backend/src/utils/tokenutils.js
+//backend/utils/tokenutils.js
 import jwt from "jsonwebtoken";
 
 export const generateJwtToken = (payload, secret, expiresIn) => {

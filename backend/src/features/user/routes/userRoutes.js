@@ -1,4 +1,4 @@
-// features/user/routes/userRoutes.js
+// backend>src>features/user/routes/userRoutes.js
 
 import express from "express";
 import * as authController from "../controllers/authController";
