@@ -11,7 +11,8 @@ import initializeSocket from "./src/config/socketIO"; // Separate file for Socke
 
 import locationRouter from "./features/location/routes/location";
 import liveStreamRouter from "./features/streaming/routes/liveStream";
-import { errorHandler, notFound } from "./src/middlewares/errorMiddleware";
+import { errorHandler, notFound } from "./src/middlewares/errorMiddleware"; // NEED ATTENTION
+import errorHandlingMiddleware from "./src/middlewares/errorHandlingMiddleware";
 
 // Load environment variables and check for required ones
 dotenv.config();
@@ -39,7 +40,8 @@ app.use("/location", locationRouter);
 
 // 404 and Error Handling Middleware
 app.use(notFound);
-app.use(errorHandler);
+app.use(errorHandler); // NEED ATTENTION
+app.use(errorHandlingMiddleware);
 
 // Initialize Socket.io
 initializeSocket(io); // Moved to a separate file

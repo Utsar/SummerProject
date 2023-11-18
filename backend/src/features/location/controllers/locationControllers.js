@@ -3,12 +3,13 @@
 import Location from "../models/locationSchema";
 import User from "../../user/models/userSchema";
 import { adjustLocationPrecision } from "../utils/adjustPrecision"; // Import the utility function
+import AppError from "../../../../utils/AppError";
 
 // Default values for pagination
 const DEFAULT_LIMIT = 10;
 const DEFAULT_PAGE = 1;
 
-export const createLocation = async (req, res) => {
+export const createLocation = async (req, res, next) => {
   try {
     const { userId, coordinates } = req.body;
 
@@ -19,11 +20,11 @@ export const createLocation = async (req, res) => {
     // Respond with the saved location data
     res.status(201).json(location);
   } catch (err) {
-    res.status(400).json({ error: "Failed to create location" });
+    next(new AppError("Failed to create location", 400));
   }
 };
 
-export const getNearbyStreamingUsers = async (req, res) => {
+export const getNearbyStreamingUsers = async (req, res, next) => {
   try {
     const {
       longitude,
@@ -71,11 +72,11 @@ export const getNearbyStreamingUsers = async (req, res) => {
       currentPage: page,
     });
   } catch (err) {
-    res.status(400).json({ error: "Failed to get nearby streaming users" });
+    next(new AppError("Failed to get nearby streaming users", 400));
   }
 };
 
-export const updateLocationWithPrecision = async (req, res) => {
+export const updateLocationWithPrecision = async (req, res, next) => {
   try {
     const { latitude, longitude, precision } = req.body;
 
@@ -97,6 +98,6 @@ export const updateLocationWithPrecision = async (req, res) => {
 
     res.json({ message: "Location updated with desired precision" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update location" });
+    next(new AppError("Failed to update location", 500));
   }
 };

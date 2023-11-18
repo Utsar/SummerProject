@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken"; // To generate JWT tokens
 import crypto from "crypto"; // For generating random tokens
 import nodemailer from "nodemailer"; // To send emails
 import { OAuth2Client } from "google-auth-library"; // For OAuth2 in nodemailer
+import AppError from "../../../../utils/AppError";
 
 // Utility function to generate a JWT token
 const generateJwtToken = (payload, expiry) => {
@@ -48,23 +49,23 @@ const sendEmail = async (to, from, subject, text) => {
 };
 
 // Register a new user, send a verification email, and issue JWT and refresh tokens
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
   try {
     const { username, password, email, profilePicture } = req.body;
 
     // Validation here (can be further expanded)
     if (!username || !password || !email) {
-      return res.status(400).json({ error: "All fields are required" });
+      return next(new AppError("All fields are required", 400));
     }
 
     const existingUser = await User.findOne({ username });
     const existingEmail = await User.findOne({ email });
 
     if (existingUser) {
-      return res.status(400).json({ error: "Username is already in use" });
+      next(new AppError("Username is already in use", 400));
     }
     if (existingEmail) {
-      return res.status(400).json({ error: "Email is already in use" });
+      next(new AppError("Email is already in use", 400));
     }
     // Adding salt and hashing the password
     const salt = await bcrypt.genSalt(10);
@@ -95,23 +96,23 @@ export const registerUser = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ error: "Failed to register user" });
+    next(new AppError("Failed to register user", 500));
   }
 };
 
 // Authenticate a user, issue JWT and refresh tokens
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
     // Validation here (can be further expanded)
     if (!username || !password) {
-      return res.status(400).json({ error: "Both fields are required" });
+      return next(new AppError("Both fields are required", 400));
     }
 
     const user = await User.findOne({ username });
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ error: "Invalid username or password" });
+      next(new AppError("Invalid Usernam or Password", 400));
     }
 
     const token = generateJwtToken({ _id: user._id.toString() }, "15m");
@@ -128,20 +129,21 @@ export const loginUser = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ error: "Failed to log in" });
+    next(new AppError("Failed to log in", 500));
   }
 };
 
 // Send a password reset token to the user's email
-export const resetPasswordRequest = async (req, res) => {
+export const resetPasswordRequest = async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ error: "No account with that email address exists" });
+      return res;
+      return next(
+        new AppError("No account with that email address exists", 400)
+      );
     }
 
     user.passwordResetToken = crypto.randomBytes(20).toString("hex");
@@ -165,12 +167,12 @@ export const resetPasswordRequest = async (req, res) => {
 
     res.json({ message: "Password reset token sent to email" });
   } catch (error) {
-    res.status(500).json({ error: "Error on password reset" });
+    next(new AppError("Error on password reset request", 500));
   }
 };
 
 // Reset user's password using the provided token
-export const resetPassword = async (req, res) => {
+export const resetPassword = async (req, res, next) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
@@ -181,9 +183,9 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ error: "Password reset token is invalid or has expired" });
+      return next(
+        new AppError("Password reset token is invalid or has expired", 400)
+      );
     }
 
     user.password = password;
@@ -194,20 +196,18 @@ export const resetPassword = async (req, res) => {
 
     res.json({ message: "Password has been reset" });
   } catch (error) {
-    res.status(500).json({ error: "Error on password reset" });
+    next(new AppError("Error on password reset", 500));
   }
 };
 
 // Verify user's email using the provided token
-export const verifyEmail = async (req, res) => {
+export const verifyEmail = async (req, res, next) => {
   try {
     const { token } = req.params;
     const user = await User.findOne({ emailVerificationToken: token });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ error: "Email verification token is invalid" });
+      return next(new AppError("Email verification token is invalid", 400));
     }
 
     user.emailVerified = true;
@@ -217,31 +217,31 @@ export const verifyEmail = async (req, res) => {
 
     res.json({ message: "Email verified" });
   } catch (error) {
-    res.status(500).json({ error: "Error on email verification" });
+    next(new AppError("Error on email verification", 500));
   }
 };
 
 /**
  * Refresh an expired JWT token using a valid refresh token.
  */
-export const refreshTokenEndpoint = async (req, res) => {
+export const refreshTokenEndpoint = async (req, res, next) => {
   const providedRefreshToken = req.body.token;
 
   if (!providedRefreshToken) {
-    return res.status(403).json({ error: "Refresh token is required" });
+    return next(new AppError("Refresh token is required", 403));
   }
 
   const user = await User.findOne({ refreshTokens: providedRefreshToken });
 
   if (!user) {
-    return res.status(403).json({ error: "Refresh token is not valid" });
+    return next(new AppError("Refresh token is not valid", 403));
   }
 
   jwt.verify(
     providedRefreshToken,
     process.env.REFRESH_TOKEN_SECRET,
     (err, user) => {
-      if (err) return res.status(403).json({ error: "Invalid refresh token" });
+      if (err) return next(new AppError("Invalid refresh token", 403));
 
       const newToken = jwt.sign(
         { _id: user._id.toString() },
@@ -260,7 +260,7 @@ export const refreshTokenEndpoint = async (req, res) => {
  * Logout a user and invalidate the provided refresh token.
  */
 
-export const logoutUser = async (req, res) => {
+export const logoutUser = async (req, res, next) => {
   try {
     const providedRefreshToken = req.body.token;
     const user = req.user; // Assuming you have authentication middleware in place
@@ -272,6 +272,6 @@ export const logoutUser = async (req, res) => {
 
     res.status(200).send({ message: "Logged out successfully" });
   } catch (error) {
-    res.status(500).send({ error: "Failed to log out" });
+    next(new AppError("Failed to log out", 500));
   }
 };

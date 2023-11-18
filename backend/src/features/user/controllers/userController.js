@@ -1,7 +1,7 @@
 // backend>src>features/user/controllers/userController.js
 import Joi from "@hapi/joi";
 import User from "../models/userSchema";
-import { customErrorHandler } from "../../../middlewares/customErrorHandler"; // Assuming you have a custom error handler
+import AppError from "../../../../utils/AppError";
 
 // Validate User Updates
 const validateUserUpdates = (updates) => {
@@ -14,31 +14,31 @@ const validateUserUpdates = (updates) => {
 };
 
 // Fetch a user's profile by their ID
-export const getUserProfile = async (req, res) => {
+export const getUserProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select(
       "-password -emailVerificationToken -passwordResetToken -passwordResetExpires"
     );
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return next(new AppError("User not found", 404));
     }
     res.json(user);
   } catch (error) {
-    customErrorHandler(error, req, res); // Log and handle errors
+    next(new AppError("Failed to retrieve user profile", 500));
   }
 };
 
 // Update the user's profile
-export const updateUserProfile = async (req, res) => {
+export const updateUserProfile = async (req, res, next) => {
   try {
     const { error } = validateUserUpdates(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      return next(new AppError(error.details[0].message, 400));
     }
 
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return next(new AppError("User not found", 404));
     }
 
     // Loop through and update fields
@@ -49,25 +49,25 @@ export const updateUserProfile = async (req, res) => {
     await user.save();
     res.json(user);
   } catch (error) {
-    customErrorHandler(error, req, res); // Log and handle errors
+    next(new AppError("Failed to update user profile", 500));
   }
 };
 
 // Delete the user's profile
-export const deleteUserProfile = async (req, res) => {
+export const deleteUserProfile = async (req, res, next) => {
   try {
     const user = await User.findByIdAndDelete(req.user._id);
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return next(new AppError("User not found", 404));
     }
     res.json({ message: "User deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete user profile" });
+    next(new AppError("Failed to delete user profile", 500));
   }
 };
 
 // Fetch users near a given location with pagination
-export const getUsersNearLocation = async (req, res) => {
+export const getUsersNearLocation = async (req, res, next) => {
   try {
     const { longitude, latitude, page = 1, limit = 10 } = req.query;
 
@@ -76,9 +76,7 @@ export const getUsersNearLocation = async (req, res) => {
 
     // Validate longitude and latitude
     if (!longitude || !latitude) {
-      return res
-        .status(400)
-        .json({ error: "Longitude and latitude are required" });
+      return next(new AppError("Longitude and latitude are required", 400));
     }
 
     const nearbyUsers = await User.find({
@@ -114,7 +112,7 @@ export const getUsersNearLocation = async (req, res) => {
       currentPage: page,
     });
   } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve nearby users" });
+    next(new AppError("Failed to retrieve nearby users", 500));
   }
 };
 
