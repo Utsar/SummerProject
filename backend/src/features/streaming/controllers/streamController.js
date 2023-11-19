@@ -3,6 +3,7 @@
 import Stream from "../models/streamSchema";
 import User from "../../user/models/userSchema"; // Adjust this import based on your folder structure
 import Joi from "joi";
+import AppError from "../../../../utils/AppError";
 
 // Joi schema for stream creation validation
 const streamCreateSchema = Joi.object({
@@ -12,10 +13,10 @@ const streamCreateSchema = Joi.object({
 });
 
 // Controller for creating a new stream
-export const createStream = async (req, res) => {
+export const createStream = async (req, res, next) => {
   const { error } = streamCreateSchema.validate(req.body);
   if (error) {
-    return res.status(400).json({ error: error.details[0].message });
+    return next(new AppError(error.details[0].message, 400));
   }
 
   try {
@@ -36,13 +37,12 @@ export const createStream = async (req, res) => {
 
     res.status(201).json({ message: "Stream created successfully", stream });
   } catch (error) {
-    console.error("Failed to create the stream:", error); // Logging
-    res.status(500).json({ error: "Failed to create the stream" });
+    next(new AppError("Failed to create the stream", 500));
   }
 };
 
 // Controller for joining a stream
-export const joinStream = async (req, res) => {
+export const joinStream = async (req, res, next) => {
   try {
     const userId = req.user._id;
     const streamId = req.params.streamId;
@@ -53,14 +53,12 @@ export const joinStream = async (req, res) => {
 
     // Check if the stream exists
     if (!stream) {
-      return res.status(404).json({ error: "Stream not found" });
+      return next(new AppError("Stream not found", 404));
     }
 
     // Check if the user has sufficient balance to join the stream
     if (stream.fee > 0 && user.balance < stream.fee) {
-      return res
-        .status(400)
-        .json({ error: "Insufficient balance to join the stream" });
+      return next(new AppError("Insufficient balance to join the stream", 400));
     }
 
     // Deduct the fee from the user's balance only if there is a fee
@@ -75,8 +73,7 @@ export const joinStream = async (req, res) => {
 
     res.status(200).json({ message: "Successfully joined the stream" });
   } catch (error) {
-    console.error("Failed to join the stream:", error); // Logging
-    res.status(500).json({ error: "Failed to join the stream" });
+    next(new AppError("Failed to join the stream", 500));
   }
 };
 
