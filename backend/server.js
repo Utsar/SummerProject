@@ -4,15 +4,19 @@ import cors from "cors";
 import dotenv from "dotenv";
 import http from "http";
 import morgan from "morgan"; // Added for logging
+import { rateLimiter } from "./src/middlewares/rateLimiter";
 import { Server } from "socket.io";
 
 import connectDB from "./config/database";
 import initializeSocket from "./src/config/socketIO"; // Separate file for Socket.io logic
 
-import locationRouter from "./features/location/routes/location";
-import liveStreamRouter from "./features/streaming/routes/liveStream";
-import { errorHandler, notFound } from "./src/middlewares/errorMiddleware"; // NEED ATTENTION
+import { notFound } from "./src/middlewares/errorMiddleware";
 import errorHandlingMiddleware from "./src/middlewares/errorHandlingMiddleware";
+
+//Routes
+import userRouter from "./src/features/user/routes/userRoutes";
+import locationRouter from "./src/features/location/routes/locationRoutes";
+import streamingRouter from "./src/features/streaming/routes/streamingRoutes";
 
 // Load environment variables and check for required ones
 dotenv.config();
@@ -27,20 +31,26 @@ const httpServer = http.createServer(app);
 const io = new Server(httpServer);
 
 // Middleware Configuration
+app.use(rateLimiter);
 app.use(cors());
 app.use(express.json());
-app.use(morgan("tiny")); // Added for logging
+app.use(
+  morgan("tiny", {
+    stream: { write: (message) => logger.info(message.trim()) },
+  })
+); // Added for logging
 
 // Connect to MongoDB
 connectDB();
 
 // Route Configuration
-app.use("/stream", liveStreamRouter);
+app.use("/stream", streamingRouter);
 app.use("/location", locationRouter);
+app.use("/user", userRouter);
 
-// 404 and Error Handling Middleware
+// Catch 404 and forward to error handler
 app.use(notFound);
-app.use(errorHandler); // NEED ATTENTION
+// Error handling
 app.use(errorHandlingMiddleware);
 
 // Initialize Socket.io
